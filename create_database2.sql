@@ -15,6 +15,7 @@
 DROP SCHEMA IF EXISTS project;
 CREATE SCHEMA project;
 USE project;
+ALTER DATABASE project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 /* tabele ////////////////////////////////////////////*/
 
