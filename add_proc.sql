@@ -10,7 +10,7 @@ SET FOREIGN_KEY_CHECKS=1;
 call dodaj_naukowcow();
 call usun_konta_naukowcow();
 call dodaj_zwierzeta();
-CALL dodaj_losowe_rosliny(10000);
+CALL dodaj_losowe_rosliny(10, 1, 20);
 
 truncate table odkrycie_zwierzecia;
 truncate table zwierze;
@@ -154,7 +154,7 @@ delimiter ;
 
 DROP PROCEDURE IF EXISTS dodaj_losowe_rosliny;
 DELIMITER $$
-CREATE PROCEDURE dodaj_losowe_rosliny(IN ilosc INT)
+CREATE PROCEDURE dodaj_losowe_rosliny(IN ilosc INT, IN min_tagow INT, IN maks_tagow INT)
     BEGIN
     
     declare l VARCHAR(255) default "login";
@@ -168,6 +168,13 @@ CREATE PROCEDURE dodaj_losowe_rosliny(IN ilosc INT)
     DECLARE rodzaj INT;
     DECLARE nowa_nazwa_rosliny VARCHAR(255);
     DECLARE licznik_prob INT DEFAULT 0;
+    
+    DECLARE wartosc_string VARCHAR(255) DEFAULT NULL;
+    DECLARE wartosc_int INT DEFAULT NULL;
+    DECLARE liczba_cech INT;
+    DECLARE wylosowana_cecha VARCHAR(255);
+    
+    DECLARE j INT;
     
     SET i = 0;
     START TRANSACTION;
@@ -270,15 +277,50 @@ CREATE PROCEDURE dodaj_losowe_rosliny(IN ilosc INT)
         
         IF nowa_nazwa_rosliny NOT IN (SELECT nazwa FROM roslina) THEN
 			CALL naukowiec_dodaje_rosline(nowa_nazwa_rosliny, '/image.png', ll, dd);
+            SET licznik_prob = 0;
             SET i = i + 1;
 		ELSE
 			SET licznik_prob = licznik_prob + 1;
-			IF licznik_prob > 100000 THEN
+			IF licznik_prob > 1000 THEN
 				SIGNAL SQLSTATE '45000'
-					SET MESSAGE_TEXT = "nie udało się wygenerować unikalnej nazwy rośliny";
+					SET MESSAGE_TEXT = "nie udało się wylosować unikalnej nazwy rośliny";
 			END IF;
 		END IF;
-
+        /*IN nazwarosliny varchar(255),
+		IN etykietaa varchar (255),
+		IN stringg varchar(255),
+		IN numb float,
+		IN log varchar(255)*/
+        IF licznik_prob = 0 THEN
+        
+			SET liczba_cech = ROUND((RAND() * (maks_tagow - min_tagow)) + min_tagow);
+			SET j = 0;
+			
+			WHILE j < liczba_cech DO
+				SET wylosowana_cecha = ELT(0.5 + RAND() * 7, 'występowanie', 'budowa', 'użytkowość', 'wymagania do światła', 'kwasowość gleby', 'tolerancja na pierwiastki', 'zapotrzebowanie na wodę');
+				CASE wylosowana_cecha
+					WHEN 'występowanie' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 7, 'Afryka', 'Ameryka Południowa', 'Ameryka Północna', 'Antarktyda', 'Australia', 'Azja', 'Europa');
+					WHEN 'budowa' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 6, 'drzewa', 'krzewy', 'krzewinki', 'jednoroczne', 'dwuletnie', 'byliny');
+					WHEN 'użytkowość' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 16, 'cukrodajne', 'miododajne', 'oleiste', 'owocowe', 'warzywne', 'zbożowe', 'przyprawowe', 'używki', 'włókniste', 'garbnikodajne', 'kauczukodajne', 'lecznicze', 'olejkodajne', 'dostarczające surowca drzewnego', 'pastewne', 'ozdobne');
+					WHEN 'wymagania do światła' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 3, 'światłolubne', 'cieniolubne', 'kompasowe');
+					WHEN 'kwasowość gleby' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 2, 'zasadolubne', 'kwasolubne');
+					WHEN 'tolerancja na pierwiastki' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 4, 'wapieniolubne', 'azotolubne', 'słonolubne', 'galmanowe');
+					WHEN 'zapotrzebowanie na wodę' THEN
+						SET wartosc_string = ELT(0.5 + RAND() * 6, 'hydrofity', 'hygrofity', 'mezofity', 'tropofity', 'halofity', 'kserofity');
+				END CASE;
+				IF wartosc_string NOT IN (SELECT roslinatag.stringvalue FROM project.roslinatag JOIN project.roslina ON roslinatag.roslina = roslina.id WHERE roslina.nazwa = nowa_nazwa_rosliny AND roslinatag.stringvalue = wartosc_string) THEN
+					CALL naukowiec_dodaje_roslinatag(nowa_nazwa_rosliny, wylosowana_cecha, wartosc_string, wartosc_int, ll);
+					SET j = j + 1;
+				END IF;
+			END WHILE;
+            
+        END IF;
     END WHILE;
     COMMIT;
 END$$

@@ -966,6 +966,7 @@ DROP VIEW IF EXISTS narodowsci_naukowcow;
 DROP VIEW IF EXISTS data_odkryc;
 DROP VIEW IF EXISTS popularnetagizwierzat;
 DROP VIEW IF EXISTS popularnetagiroslin;
+DROP VIEW IF EXISTS roslinyztagami;
 
 CREATE VIEW narodowosci_naukowcow
 AS
@@ -977,8 +978,12 @@ SELECT COUNT(s.data_odkrycia) as ile_odkryc,s.data_odkrycia FROM((SELECT data_od
 
 CREATE VIEW popularnetagizwierzat
 AS
-SELECT etykieta,count(id) as c FROM zwierzetag group by etykieta;
+SELECT etykieta,count(id) as c FROM zwierzetag group by etykieta order by c desc;
 
 CREATE VIEW popularnetagiroslin
 AS
-SELECT etykieta,count(id) as c FROM roslinatag group by etykieta;
+SELECT etykieta,count(id) as c FROM roslinatag group by etykieta order by c desc;
+
+CREATE VIEW roslinyztagami
+AS
+SELECT roslina.nazwa, roslinatag.etykieta, roslinatag.stringvalue FROM project.roslinatag JOIN project.roslina ON roslinatag.roslina = roslina.id;
