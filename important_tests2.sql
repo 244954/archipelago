@@ -1,3 +1,42 @@
+/*
+SELECT zwierze.nazwa,t.c FROM zwierze JOIN
+(SELECT zwierze,COUNT(id) as c
+FROM zwierzetag
+WHERE (etykieta='wystepowanie' AND stringvalue='Europa') OR
+(etykieta='kolor siersci' AND stringvalue='bialy') OR
+(etykieta='liczba oczu' AND numbervalue=2)
+GROUP BY zwierze
+ORDER BY c DESC) as t
+ON zwierze.id=t.zwierze;
+
+call zwierzeta_pasujace_tagi('wystepowanie','Europa',NULL,'kolor siersci','bialy',NULL,'liczba oczu',NULL,2,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
+call naukowiec_dodaje_zwierze('ąęółśżćńź','http://www.obrazek.jpg','NULL','henlo','2001-2-05');
+
+call naukowiec_dodaje_zwierze('szczur','http://www.obrazek.jpg','NULL','henlo','2001-2-05');
+call naukowiec_dodaje_zwierze('szczur1','http://www.obrazek.jpg','NULL','henlo','2005-2-05');
+call naukowiec_dodaje_zwierze('szczur2','http://www.obrazek.jpg','NULL','henlo','2004-2-05');
+call naukowiec_dodaje_zwierze('szczur3','http://www.obrazek.jpg','NULL','henlo','2003-2-05');
+call naukowiec_dodaje_zwierze('szczur4','http://www.obrazek.jpg','NULL','henlo','2002-2-05');
+call naukowiec_dodaje_zwierze('szczur5','http://www.obrazek.jpg','NULL','henlo','2009-2-05');
+
+call naukowiec_dodaje_zwierzetag('szczur','liczba oczu',NULL,2.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur','wystepowanie','europa',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur','kolor siersci','bialy',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur1','liczba oczu',NULL,3.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur1','wystepowanie','europa',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur1','kolor siersci','czarny',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur2','liczba oczu',NULL,2.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur2','wystepowanie','azja',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur2','kolor siersci','bialy',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur3','liczba oczu',NULL,2.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur3','wystepowanie','europa',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur4','liczba oczu',NULL,2.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur5','liczba oczu',NULL,0.0,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur5','wystepowanie','afryka',NULL,'henlo');
+call naukowiec_dodaje_zwierzetag('szczur5','kolor siersci','szary',NULL,'henlo');
+*/
+
 /* old methods
 INSERT INTO naukowiec(imie,nazwisko,data_urodzenia,kraj_pochodzenia,specjalizacja,pensja,ulubiony_napoj)
 values ('Stephen','Cunnington','1976-4-27','Kanada','chemik',9000,1);

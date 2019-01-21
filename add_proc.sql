@@ -15,13 +15,16 @@ truncate table odkrycie_zwierzecia;
 truncate table zwierze;
 
 call naukowiec_modyfikuje_zwierze('zwierze3','szczur',NULL,0,'login79');
+
+call zwierzeta_pasujace_tagi('cecha18','wlasciwosc14',NULL,'cecha20','wlasciwosc24',NULL,'cecha3',NULL,12.8195,'cecha16','wlasciwosc1',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+
 */
 
 DROP PROCEDURE IF EXISTS dodaj_naukowcow;
 
 delimiter //
 
-CREATE PROCEDURE `dodaj_naukowcow` (in numb int)
+CREATE PROCEDURE `dodaj_naukowcow` ()
 BEGIN
 declare c INT default 1;
 declare i VARCHAR(255) default "imie";
@@ -114,7 +117,7 @@ declare s VARCHAR(255) default "wlasciwosc";
 declare ss VARCHAR(255);
 declare li float;
 
-WHILE c <= 100 DO
+WHILE c <= 10000 DO
 
 SET ii = CONCAT(i,c);
 SET nn = CONCAT(n,c);

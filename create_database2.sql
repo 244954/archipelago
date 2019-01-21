@@ -1,5 +1,5 @@
 /* do zrobienia:
--procedury powinny zwracac blad jesli wystapil jakis konflikt
+-procedury powinny zwracac blad jesli wystapil jakis konflikt [DONE]
 -nazwy zwierzat powinny byc unikalne [DONE]
 -procedury dla roslin [DONE]
 -widoki
@@ -7,6 +7,7 @@
 -blad jesli wystepuje " ' " w nazwie lub linku
 -trigger w updacie zwierze blad [DONE]
 -id zwierzat i roslin moga rosnac nawet po nieudanych insertach (bo bylo wstawione a potem rollback)
+-narzedzie do szukania po tagach?
 */
 
 /* baza danych ///////////////////////////////////////*/
@@ -384,6 +385,9 @@ DROP PROCEDURE IF EXISTS naukowiec_usuwa_rosline;
 DROP PROCEDURE IF EXISTS naukowiec_modyfikuje_roslinatag;
 DROP PROCEDURE IF EXISTS naukowiec_usuwa_roslinatag;
 
+DROP PROCEDURE IF EXISTS zwierzeta_pasujace_tagi;
+DROP PROCEDURE IF EXISTS rosliny_pasujace_tagi;
+
 delimiter //
 
 CREATE PROCEDURE `delete_zwierze` (
@@ -419,6 +423,14 @@ IN log VARCHAR(255),
 IN pas VARCHAR(255)
 )
 BEGIN
+
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+BEGIN
+GET DIAGNOSTICS CONDITION 1
+@p1 = RETURNED_SQLSTATE, @p2 = MESSAGE_TEXT;
+SELECT @p1 as RETURNED_SQLSTATE  , @p2 as MESSAGE_TEXT;
+ROLLBACK;
+END;
 
 SET AUTOCOMMIT=0;
 
@@ -492,8 +504,13 @@ IN dataod date
 )
 BEGIN
 
-DECLARE `_rollback` BOOL DEFAULT 0;
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+BEGIN
+GET DIAGNOSTICS CONDITION 1
+@p1 = RETURNED_SQLSTATE, @p2 = MESSAGE_TEXT;
+SELECT @p1 as RETURNED_SQLSTATE  , @p2 as MESSAGE_TEXT;
+ROLLBACK;
+END;
 
 START transaction;
 
@@ -507,11 +524,7 @@ SET @ii=(SELECT id FROM naukowcylogs WHERE log=naukowcylogs.login);
 INSERT INTO odkrycie_zwierzecia(id_naukowca,id_zwierzecia,data_odkrycia)
 VALUES(@ii,last_insert_id(),dataod);
 
-IF `_rollback` THEN
-        ROLLBACK;
-    ELSE
-        COMMIT;
-    END IF;
+COMMIT;
 
 END //
 
@@ -537,6 +550,8 @@ IF (@l=log)
 THEN
 INSERT INTO zwierzetag(zwierze,etykieta,stringvalue,numbervalue)
 values(@i,etykietaa,stringg,numb);
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub zwierze nie istnieje';
 END IF;
 
 END //
@@ -577,6 +592,8 @@ UPDATE zwierze
 SET naturalny_wrog=naturalny_wrogg
 WHERE id=@i; END IF;
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub zwierze nie istnieje';
 END IF;
 
 END //
@@ -609,6 +626,8 @@ WHERE naturalny_wrog=(SELECT id from (select * from zwierze) as s where nazwa=na
         
 delete from zwierze where nazwa=nazwazwierzecia limit 1; /* limit na wszelki wypadek */
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub zwierze nie istnieje';
 END IF;
 
 END //
@@ -641,6 +660,9 @@ WHERE zwierze=@i AND etykieta=etykietaa;
 UPDATE zwierzetag
 SET numbervalue=numb
 WHERE zwierze=@i AND etykieta=etykietaa;
+
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub zwierze nie istnieje';
 END IF;
 
 END //
@@ -667,6 +689,8 @@ THEN
 DELETE FROM zwierzetag
 WHERE zwierze=@i AND etykieta=etykietaa;
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub zwierze nie istnieje';
 END IF;
 
 END //
@@ -685,8 +709,13 @@ IN dataod date
 )
 BEGIN
 
-DECLARE `_rollback` BOOL DEFAULT 0;
-    DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SET `_rollback` = 1;
+DECLARE EXIT HANDLER FOR SQLEXCEPTION
+BEGIN
+GET DIAGNOSTICS CONDITION 1
+@p1 = RETURNED_SQLSTATE, @p2 = MESSAGE_TEXT;
+SELECT @p1 as RETURNED_SQLSTATE  , @p2 as MESSAGE_TEXT;
+ROLLBACK;
+END;
 
 START transaction;
 
@@ -698,11 +727,8 @@ SET @ii=(SELECT id FROM naukowcylogs WHERE log=naukowcylogs.login);
 INSERT INTO odkrycie_rosliny(id_naukowca,id_rosliny,data_odkrycia)
 VALUES(@ii,last_insert_id(),dataod);
 
-IF `_rollback` THEN
-        ROLLBACK;
-    ELSE
-        COMMIT;
-    END IF;
+
+COMMIT;
 
 END //
 
@@ -728,6 +754,9 @@ IF (@l=log)
 THEN
 INSERT INTO roslinatag(roslina,etykieta,stringvalue,numbervalue)
 values(@i,etykietaa,stringg,numb);
+
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub roslina nie istnieje';
 END IF;
 
 END //
@@ -764,6 +793,8 @@ UPDATE roslina
 SET imagelink=imagelinkk
 WHERE id=@i; END IF;
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub roslina nie istnieje';
 END IF;
 
 END //
@@ -792,6 +823,8 @@ WHERE id=(SELECT s.id_naukowca FROM (select odkrycie_rosliny.id_naukowca,roslina
       
 delete from roslina where nazwa=nazwarosliny limit 1; /* limit na wszelki wypadek */
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub roslina nie istnieje';
 END IF;
 
 END //
@@ -824,6 +857,9 @@ WHERE roslina=@i AND etykieta=etykietaa;
 UPDATE roslinatag
 SET numbervalue=numb
 WHERE roslina=@i AND etykieta=etykietaa;
+
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub roslina nie istnieje';
 END IF;
 
 END //
@@ -850,7 +886,74 @@ THEN
 DELETE FROM roslinatag
 WHERE roslina=@i AND etykieta=etykietaa;
 
+else
+SIGNAL SQLSTATE '12345' SET MESSAGE_TEXT = 'Nie masz uprawnien lub roslina nie istnieje';
 END IF;
+
+END //
+
+delimiter ;
+
+/*//////////////////////////////////////////////////////////////////*/
+
+delimiter //
+
+CREATE PROCEDURE `zwierzeta_pasujace_tagi` (
+IN e1 varchar(255),IN s1 varchar(255),IN n1 float,
+IN e2 varchar(255),IN s2 varchar(255),IN n2 float,
+IN e3 varchar(255),IN s3 varchar(255),IN n3 float,
+IN e4 varchar(255),IN s4 varchar(255),IN n4 float,
+IN e5 varchar(255),IN s5 varchar(255),IN n5 float,
+IN e6 varchar(255),IN s6 varchar(255),IN n6 float
+)
+BEGIN
+
+
+
+SELECT zwierze.nazwa,t.c FROM zwierze JOIN
+(SELECT zwierze,COUNT(id) as c
+FROM zwierzetag
+WHERE (e1 IS NOT NULL AND etykieta=e1 AND ( (s1 IS NOT NULL AND stringvalue=s1) OR (n1 IS NOT NULL AND numbervalue=n1) ) ) OR
+(e2 IS NOT NULL AND etykieta=e2 AND ( (s2 IS NOT NULL AND stringvalue=s2) OR (n2 IS NOT NULL AND numbervalue=n2) ) ) OR
+(e3 IS NOT NULL AND etykieta=e3 AND ( (s3 IS NOT NULL AND stringvalue=s3) OR (n3 IS NOT NULL AND numbervalue=n3) ) ) OR
+(e4 IS NOT NULL AND etykieta=e4 AND ( (s4 IS NOT NULL AND stringvalue=s4) OR (n4 IS NOT NULL AND numbervalue=n4) ) ) OR
+(e5 IS NOT NULL AND etykieta=e5 AND ( (s5 IS NOT NULL AND stringvalue=s5) OR (n5 IS NOT NULL AND numbervalue=n5) ) ) OR
+(e6 IS NOT NULL AND etykieta=e6 AND ( (s6 IS NOT NULL AND stringvalue=s6) OR (n6 IS NOT NULL AND numbervalue=n6) ) )
+GROUP BY zwierze
+ORDER BY c DESC) as t
+ON zwierze.id=t.zwierze;
+
+END //
+
+delimiter ;
+
+
+delimiter //
+
+CREATE PROCEDURE `rosliny_pasujace_tagi` (
+IN e1 varchar(255),IN s1 varchar(255),IN n1 float,
+IN e2 varchar(255),IN s2 varchar(255),IN n2 float,
+IN e3 varchar(255),IN s3 varchar(255),IN n3 float,
+IN e4 varchar(255),IN s4 varchar(255),IN n4 float,
+IN e5 varchar(255),IN s5 varchar(255),IN n5 float,
+IN e6 varchar(255),IN s6 varchar(255),IN n6 float
+)
+BEGIN
+
+
+
+SELECT roslina.nazwa,t.c FROM roslina JOIN
+(SELECT roslina,COUNT(id) as c
+FROM roslinatag
+WHERE (e1 IS NOT NULL AND etykieta=e1 AND ( (s1 IS NOT NULL AND stringvalue=s1) OR (n1 IS NOT NULL AND numbervalue=n1) ) ) OR
+(e2 IS NOT NULL AND etykieta=e2 AND ( (s2 IS NOT NULL AND stringvalue=s2) OR (n2 IS NOT NULL AND numbervalue=n2) ) ) OR
+(e3 IS NOT NULL AND etykieta=e3 AND ( (s3 IS NOT NULL AND stringvalue=s3) OR (n3 IS NOT NULL AND numbervalue=n3) ) ) OR
+(e4 IS NOT NULL AND etykieta=e4 AND ( (s4 IS NOT NULL AND stringvalue=s4) OR (n4 IS NOT NULL AND numbervalue=n4) ) ) OR
+(e5 IS NOT NULL AND etykieta=e5 AND ( (s5 IS NOT NULL AND stringvalue=s5) OR (n5 IS NOT NULL AND numbervalue=n5) ) ) OR
+(e6 IS NOT NULL AND etykieta=e6 AND ( (s6 IS NOT NULL AND stringvalue=s6) OR (n6 IS NOT NULL AND numbervalue=n6) ) )
+GROUP BY roslina
+ORDER BY c DESC) as t
+ON roslina.id=t.roslina;
 
 END //
 
@@ -860,6 +963,8 @@ delimiter ;
 
 DROP VIEW IF EXISTS narodowsci_naukowcow;
 DROP VIEW IF EXISTS data_odkryc;
+DROP VIEW IF EXISTS popularnetagizwierzat;
+DROP VIEW IF EXISTS popularnetagiroslin;
 
 CREATE VIEW narodowosci_naukowcow
 AS
@@ -868,3 +973,11 @@ SELECT kraj_pochodzenia,COUNT(id) as jakwiele FROM naukowiec GROUP BY kraj_pocho
 CREATE VIEW data_odkryc
 AS
 SELECT COUNT(s.data_odkrycia) as ile_odkryc,s.data_odkrycia FROM((SELECT data_odkrycia FROM odkrycie_rosliny) UNION (SELECT data_odkrycia FROM odkrycie_zwierzecia)) as s GROUP BY s.data_odkrycia;
+
+CREATE VIEW popularnetagizwierzat
+AS
+SELECT etykieta,count(id) as c FROM zwierzetag group by etykieta;
+
+CREATE VIEW popularnetagiroslin
+AS
+SELECT etykieta,count(id) as c FROM roslinatag group by etykieta;
